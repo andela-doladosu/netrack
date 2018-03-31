@@ -69,4 +69,23 @@ class RegisterController extends Controller
             'password' => Hash::make($data['password']),
         ]);
     }
+
+    /**
+     * The user has been registered.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  mixed  $user
+     * @return mixed
+     */
+    protected function registered(\Illuminate\Http\Request $request, $user)
+    {
+        $token = str_random(30);
+        $user->api_token = $token;
+        $user->save();
+
+        return [
+            "api_token" => $user->api_token,
+            "message" => 'User created successfully'
+        ];
+    }
 }

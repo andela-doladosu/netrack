@@ -52,4 +52,22 @@ class ApiTest extends TestCase
         );
         $response->assertStatus(200);
     }
+
+    public function testSignUpRoute()
+    {
+        $response = $this->json(
+            'POST',
+            '/api/signup',
+            [
+                'email' => 'me@mail.com',
+                'name' => 'Sally',
+                'password' => 'pass1234',
+                'password_confirmation' => 'pass1234'
+            ]
+        );
+
+        $response
+            ->assertStatus(200)
+            ->assertJsonStructure(['message', 'api_token']);
+    }
 }
