@@ -143,4 +143,10 @@ class ApiTest extends TestCase
         $this->assertNotNull($user->api_token);
         $this->assertNotEquals($token, $newToken);
     }
+
+    public function testUserCanAddNetworkInfo()
+    {
+        $response = $this->post('/api/network');
+        $response->assertStatus(200);
+    }
 }
