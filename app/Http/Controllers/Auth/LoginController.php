@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
+use Illuminate\Http\Request;
 
 class LoginController extends Controller
 {
@@ -28,12 +29,33 @@ class LoginController extends Controller
     protected $redirectTo = '/home';
 
     /**
-     * Create a new controller instance.
+     * Send the response after the user was authenticated.
      *
-     * @return void
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
      */
-    public function __construct()
+    protected function sendLoginResponse(Request $request)
     {
-        $this->middleware('guest')->except('logout');
+        $this->clearLoginAttempts($request);
+
+        return $this->authenticated($request, $this->guard()->user());
+    }
+
+    /**
+     * The user has been authenticated.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  mixed  $user
+     * @return mixed
+     */
+    protected function authenticated(Request $request, $user)
+    {
+        $user->api_token = str_random(30);
+        $user->save();
+
+        return [
+            "message" => "User logged in successfully",
+            "api_token" => $user->api_token
+        ];
     }
 }

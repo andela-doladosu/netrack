@@ -70,4 +70,77 @@ class ApiTest extends TestCase
             ->assertStatus(200)
             ->assertJsonStructure(['message', 'api_token']);
     }
+
+    public function testLoginRoute()
+    {
+        $email = 'me@mmmail.com';
+        $password = 'pass1234';
+
+        $signup = $this->json(
+            'POST',
+            '/api/signup',
+            [
+                'email' => $email,
+                'name' => 'Sally',
+                'password' => $password,
+                'password_confirmation' => $password
+            ]
+        );
+
+        $signup->assertStatus(200);
+
+        $response = $this->json(
+            'POST',
+            '/api/login',
+            [
+                'email' => $email,
+                'password' => $password
+            ]
+        );
+
+        $response
+            ->assertStatus(200)
+            ->assertJsonStructure(['message', 'api_token']);
+    }
+
+    public function testTokenIsSavedOnLogin()
+    {
+        $email = 'me@mmmail.com';
+        $password = 'pass1234';
+
+        $signup = $this->json(
+            'POST',
+            '/api/signup',
+            [
+                'email' => $email,
+                'name' => 'Sally',
+                'password' => $password,
+                'password_confirmation' => $password
+            ]
+        );
+
+        $user = User::where(['email' => $email])->first();
+        $token = $user->api_token;
+        $this->assertNotNull($user->api_token);
+
+        $user->api_token = null;
+        $user->save();
+
+        $user = User::where(['email' => $email])->first();
+        $this->assertNull($user->api_token);
+
+        $response = $this->json(
+            'POST',
+            '/api/login',
+            [
+                'email' => $email,
+                'password' => $password
+            ]
+        );
+
+        $user = User::where(['email' => $email])->first();
+        $newToken = $user->token;
+        $this->assertNotNull($user->api_token);
+        $this->assertNotEquals($token, $newToken);
+    }
 }
