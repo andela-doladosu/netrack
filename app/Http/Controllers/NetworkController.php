@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Network;
 
 class NetworkController extends Controller
 {
@@ -34,7 +35,18 @@ class NetworkController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $network = new Network;
+
+        if ($networkLog = $network->create($request->all())) {
+            return response()->json([
+                'message' => 'Network log added successfully',
+                'network_log_id' => $networkLog->id
+            ], 200);
+        } else {
+            return response()->json([
+                'message' => 'An error occurred while adding a network log',
+            ], 204);
+        }
     }
 
     /**

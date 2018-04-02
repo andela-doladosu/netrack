@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\User;
+use App\Network;
 
 class ApiTest extends TestCase
 {
@@ -146,7 +147,38 @@ class ApiTest extends TestCase
 
     public function testUserCanAddNetworkInfo()
     {
-        $response = $this->post('/api/network');
-        $response->assertStatus(200);
+        $token = str_random(20);
+        $user = factory(User::class)->create([
+            'api_token' => $token
+        ]);
+
+        $network = factory(Network::class)->make([
+            'user_id' => $user->id
+        ]);
+
+        $response = $this->withHeaders([
+            'HTTP_Authorization' => 'Bearer ' . $token
+        ])
+        ->json(
+            'POST',
+            '/api/network',
+            json_decode($network, true)
+        );
+
+        $response
+            ->assertStatus(200)
+            ->assertJsonStructure([
+                'message', 'network_log_id'
+            ])
+            ->assertJsonFragment([
+                'message' => 'Network log added successfully'
+            ]);
+
+        $log = json_decode($response->getContent(), true);
+        $logId = $log['network_log_id'];
+
+        $addedLog = Network::find($logId);
+        $this->assertNotNull($addedLog);
+        $this->assertEquals($user->email, $addedLog->user->email);
     }
 }
