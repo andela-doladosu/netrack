@@ -199,5 +199,55 @@ class ApiTest extends TestCase
         );
 
         $logs->assertStatus(200);
+
+        $logs = $this->json(
+            'get',
+            '/api/network/1'
+        );
+
+        $logs->assertStatus(200);
+
+        $api_token = str_random(30);
+        $user = factory(User::class)->create([
+            'api_token' => $api_token
+        ]);
+        $user_id = $user->id;
+
+        $logCount = 10;
+        factory(Network::class, $logCount)->create([
+            'user_id' => $user_id
+        ]);
+
+        $response = $this->get('/api/network');
+
+        $response->assertStatus(200)
+            ->assertJsonCount($logCount);
+    }
+
+    public function testAnyoneCanViewNetworkLogsByAUser()
+    {
+        $api_token = str_random(30);
+        $user = factory(User::class)->create([
+            'api_token' => $api_token
+        ]);
+        $user_id = $user->id;
+
+        $logCount = 10;
+        factory(Network::class, $logCount)->create([
+            'user_id' => $user_id
+        ]);
+
+        $logs = $this->json(
+            'get',
+            '/api/network',
+            [
+                'user_id' => $user_id
+            ]
+        );
+
+        $logs->assertStatus(200)
+            ->assertJsonCount($logCount);
+        $userLogs = Network::where(['user_id' => $user_id])->get()->toArray();
+        $this->assertEquals($logs->json(), $userLogs);
     }
 }

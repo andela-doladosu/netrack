@@ -14,11 +14,23 @@ class NetworkController extends Controller
     /**
      * Display a listing of the resource.
      *
+     * @request \Illuminate\Http\Request
+     *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        if ($request->filled('user_id')) {
+            $user = $request->input('user_id');
+            $network = new Network;
+
+            return response()->json(
+                $network->where(['user_id' => $user])->get()->toArray(),
+                200
+            );
+        }
+
+        return response()->json(Network::all()->toArray(), 200);
     }
 
     /**
