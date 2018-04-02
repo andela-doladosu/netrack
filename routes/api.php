@@ -20,6 +20,4 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 Route::post('/signup', 'Auth\RegisterController@register');
 Route::post('/login', 'Auth\LoginController@login');
 
-Route::group(['middleware' => 'auth:api'], function () {
-    Route::resource('/network', 'NetworkController');
-});
+Route::resource('/network', 'NetworkController');

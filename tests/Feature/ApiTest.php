@@ -156,6 +156,15 @@ class ApiTest extends TestCase
             'user_id' => $user->id
         ]);
 
+        $response = $this->json(
+            'POST',
+            '/api/network',
+            json_decode($network, true)
+        );
+
+        $response
+            ->assertStatus(401);
+
         $response = $this->withHeaders([
             'HTTP_Authorization' => 'Bearer ' . $token
         ])
@@ -180,5 +189,15 @@ class ApiTest extends TestCase
         $addedLog = Network::find($logId);
         $this->assertNotNull($addedLog);
         $this->assertEquals($user->email, $addedLog->user->email);
+    }
+
+    public function testAnyoneCanViewAllNetworkLogs()
+    {
+        $logs = $this->json(
+            'get',
+            '/api/network'
+        );
+
+        $logs->assertStatus(200);
     }
 }
