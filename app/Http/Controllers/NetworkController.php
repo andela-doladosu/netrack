@@ -107,6 +107,20 @@ class NetworkController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $ids = explode(',', $id);
+        $logs = Network::find($ids);
+        $user_id = \Auth::user()->id;
+
+        $userLogs = $logs->filter(function ($log) use ($user_id) {
+            return (int) $log->user_id === $user_id;
+        });
+
+        $userLogIds = $userLogs->pluck('id')->toArray();
+
+        if (Network::destroy($userLogIds)) {
+            return response()->json(['message' => 'done delete'], 200);
+        } else {
+            return response()->json(['message' => 'Nothing to delete'], 201);
+        }
     }
 }

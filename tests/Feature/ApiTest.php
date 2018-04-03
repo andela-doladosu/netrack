@@ -250,4 +250,64 @@ class ApiTest extends TestCase
         $userLogs = Network::where(['user_id' => $user_id])->get()->toArray();
         $this->assertEquals($logs->json(), $userLogs);
     }
+
+    public function testAUserCanDeleteTheirLogs()
+    {
+        $api_token = str_random(30);
+        $user = factory(User::class)->create([
+            'api_token' => $api_token
+        ]);
+        $user_id = $user->id;
+
+        $logCount = 10;
+        $logs = factory(Network::class, $logCount)->create([
+            'user_id' => $user_id
+        ]);
+
+        $ids = array_pluck($logs, 'id');
+        $idsString = implode($ids, ',');
+
+        $logsBeforeDelete = $this->get('/api/network')->json();
+
+        $response = $this->withHeaders([
+                'HTTP_Authorization' => 'Bearer ' . $api_token
+            ])->deleteJson(
+                "/api/network/$idsString"
+            );
+
+        $allLogs = Network::all()->toArray();
+        $this->assertNotEquals($logsBeforeDelete, $allLogs);
+        $response->assertStatus(200);
+    }
+
+    public function testAUserCannotDeleteAnotherUsersLogs()
+    {
+        $logCount = 10;
+        $logs = factory(Network::class, $logCount)->create();
+        $ids = array_pluck($logs, 'id');
+        $idsString = implode($ids, ',');
+
+        $api_token = str_random(30);
+        $user = factory(User::class)->create([
+            'api_token' => $api_token
+        ]);
+        $user_id = $user->id;
+
+        $logs = factory(Network::class, $logCount)->create([
+            'user_id' => $user_id
+        ]);
+
+        $logsBeforeDelete = $this->get('/api/network')->json();
+
+        $response = $this->withHeaders([
+                'HTTP_Authorization' => 'Bearer ' . $api_token
+            ])->deleteJson(
+                "/api/network/$idsString"
+            );
+
+        $allLogs = Network::all()->toArray();
+        $this->assertEquals($logsBeforeDelete, $allLogs);
+        $response->assertStatus(201)
+            ->assertJson(['message' => 'Nothing to delete']);
+    }
 }
